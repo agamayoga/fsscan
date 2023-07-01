@@ -31,10 +31,24 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
-//using Newtonsoft.Json;
-//using Newtonsoft.Json.Converters;
+
+[assembly: AssemblyTitle("FileSystemScan")]
+[assembly: AssemblyDescription("")]
+[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyCompany("Agama")]
+[assembly: AssemblyProduct("FileSystemScan")]
+[assembly: AssemblyCopyright("Copyright © Agama 2020")]
+[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCulture("")]
+[assembly: ComVisible(false)]
+[assembly: Guid("9038ffad-95a4-47da-b6cd-9554189a7f17")]
+[assembly: AssemblyVersion("1.1.0.0")]
+[assembly: AssemblyFileVersion("1.1.0.0")]
 
 namespace Agama
 {
@@ -43,6 +57,7 @@ namespace Agama
     /// </summary>
     public class Program
     {
+        public static bool Force = false; //Force overwrite?
         public static string DriveLetter = null;
         public static string InputPath = null;
         public static string OutputPath = null;
@@ -73,6 +88,15 @@ namespace Agama
             {
                 switch (args[i])
                 {
+                    case "--version":
+                        Console.WriteLine(GetAssemblyVersion());
+                        Environment.Exit(0);
+                        break;
+                        
+                    case "-f":
+                        Force = true;
+                        break;
+                        
                     case "-s":
                         DriveLetter = args[++i];
                         break;
@@ -87,9 +111,9 @@ namespace Agama
 
                     case "-o":
                         OutputPath = args[++i];
-                        if (File.Exists(OutputPath))
+                        if (File.Exists(OutputPath) && !Force)
                         {
-                            //throw new Exception("Output file already exists: " + OutputPath);
+                            throw new Exception("Output file already exists: " + OutputPath);
                         }
                         break;
 
@@ -108,6 +132,7 @@ namespace Agama
                         break;
 
                     default:
+                    case "--help":
                         Usage();
                         return;
                 }
@@ -136,6 +161,9 @@ namespace Agama
             Console.WriteLine("  fsscan [options]");
             Console.WriteLine();
             Console.WriteLine("Options:");
+            Console.WriteLine("  --help               Print this message");
+            Console.WriteLine("  --version            Print version");
+            Console.WriteLine("  -f                   Force overwrite if file exists");
             Console.WriteLine("  -s [dir]             Scan for folders and files");
             Console.WriteLine("  -i [file]            Input json file to resume");
             Console.WriteLine("  -o [file]            Output json file to save the scan result");
@@ -144,7 +172,12 @@ namespace Agama
             Console.WriteLine("Examples:");
             Console.WriteLine("  fsscan -s C: -o drive_c.json");
             Console.WriteLine("  fsscan -s D: -o drive_d.json");
-            Console.WriteLine("  fsscan -c drive_c.json drive_d.json");
+            Console.WriteLine("  fsscan -c drive_c.json drive_d.json -o result.json");
+        }
+        
+        public static string GetAssemblyVersion()
+        {
+            return typeof(Program).Assembly.GetName().Version.ToString();
         }
 
         public static void ScanDrive(string drive)
@@ -432,19 +465,8 @@ namespace Agama
 
             public static string Stringify(object data)
             {
-                //string json = JsonConvert.SerializeObject(list, Formatting.Indented, new JsonConverter[] { new StringEnumConverter() });
-
                 string json = null;
                 DataContractJsonSerializerSettings settings = new DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true };
-                /*
-				DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(List<RecordInfo>));
-				using (var ms = new MemoryStream())
-				{
-					serializer.WriteObject(ms, list);
-					byte[] data = ms.ToArray();
-					json = Encoding.UTF8.GetString(data, 0, data.Length);
-				}
-				*/
                 using (var stream = new MemoryStream())
                 {
                     using (var writer = JsonReaderWriterFactory.CreateJsonWriter(stream, Encoding.UTF8, true, true, "  "))

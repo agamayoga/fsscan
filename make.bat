@@ -9,7 +9,7 @@ rem set CSC=%WINDIR%\Microsoft.NET\Framework\v2.0.50727\csc.exe
 if not exist %CSC% goto error-csc
 
 rem %CSC% /reference:System.Runtime.Serialization.dll /reference:lib\Newtonsoft.Json.dll /warn:0 /target:exe /out:bin\fsscan.exe src\fsscan.cs
-%CSC% /reference:System.Runtime.Serialization.dll /warn:0 /target:exe /out:bin\fsscan.exe src\fsscan.cs
+%CSC% /nologo /reference:System.Runtime.Serialization.dll /warn:0 /target:exe /out:bin\fsscan.exe src\fsscan.cs
 goto end
 
 :error-csc
